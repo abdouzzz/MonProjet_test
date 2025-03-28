@@ -2,27 +2,35 @@ pipeline {
     agent any
 
     stages {
-        stage('Cloner le dépôt') {
+        stage('Clone Repository') {
             steps {
-                git url : 'https://github.com/abdouzzz/MonProjet_test.git' , branch : 'main'
+                // Cloner la branche main du dépôt public
+                git url: 'https://github.com/abdouzzz/MonProjet_test.git', branch: 'main'
             }
         }
-
-        stage('Exécuter les tests unitaires') {
+        stage('Check Python Version') {
             steps {
-                sh 'python -m unittest discover tests'
+                script {
+                    // Vérifier que python3 et pip3 sont disponibles dans le PATH
+                    sh 'python3 --version'
+                    sh 'pip3 --version'
+                }
             }
         }
-
-        stage('Construire l’image Docker') {
+        stage('Install Dependencies') {
             steps {
-                sh 'docker build -t abdou/test-python:latest .'
+                script {
+                    // Installer les dépendances dans l'environnement global
+                    sh 'pip3 install --break-system-packages -r requirements.txt'
+                }
             }
         }
-
-        stage('Déployer sur un serveur local') {
+        stage('Run Tests') {
             steps {
-                sh 'docker run -d -p 8000:8000 abdou/test-python:latest'
+                script {
+                    // Exécuter les tests avec python3
+                    sh 'python3 -m unittest discover -s tests'
+                }
             }
         }
     }
