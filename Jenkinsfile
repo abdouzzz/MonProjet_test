@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Cloner le dépôt') {
             steps {
-                git 'https://github.com/abdouzzz/MonProjet_test.git'
+                git url : 'https://github.com/abdouzzz/MonProjet_test.git' , branch : 'main'
             }
         }
 
