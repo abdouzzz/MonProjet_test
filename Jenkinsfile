@@ -33,5 +33,22 @@ pipeline {
                 }
             }
         }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Construire l'image Docker avec un tag spécifique
+                    sh 'docker build -t monprojet:latest .'
+                }
+            }
+        }
+        stage('Run Docker Container Locally') {
+            steps {
+                script {
+                    // Démarrer un container Docker localement
+                    // Exposer le port de l'application, ici le port 8000
+                    sh 'docker run -d -p 8000:8000 monprojet:latest'
+                }
+            }
+        }
     }
 }
