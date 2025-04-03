@@ -11,7 +11,7 @@ pipeline {
             steps {
                 git branch: 'main', url: 'https://github.com/abdouzzz/MonProjet_test.git'
 
-            }ss
+            }
         }
 
         stage('Construire l\'image Docker') {
