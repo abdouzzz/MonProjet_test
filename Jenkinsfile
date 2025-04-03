@@ -9,8 +9,9 @@ pipeline {
     stages {
         stage('Cloner le dépôt') {
             steps {
-                git 'https://github.com/abdouzzz/MonProjet_test.git'
-            }
+                git branch: 'main', url: 'https://github.com/abdouzzz/MonProjet_test.git'
+
+            }ss
         }
 
         stage('Construire l\'image Docker') {
