@@ -1,3 +1,0 @@
-# dépendances :
-pytest
-unittest
