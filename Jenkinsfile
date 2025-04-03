@@ -1,57 +1,60 @@
 pipeline {
-    agent any  // Utilisation de l'agent par défaut pour exécuter sur n'importe quel noeud
-
-    environment {
-        DOCKER_IMAGE = "monprojet:latest"  // Nom de l'image Docker
-    }
+    agent any
 
     stages {
-        stage('Clone Repository') {
+        stage('Check Python and Pip') {
             steps {
-                // Cloner le dépôt Git
-                git url: 'https://github.com/abdouzzz/MonProjet_test.git', branch: 'main'
+                script {
+                    // Vérifier si Python 3 et pip3 sont installés
+                    sh 'python3 --version'
+                    sh 'pip3 --version'
+                }
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install Python and Pip') {
             steps {
-                // Installer les dépendances Python depuis requirements.txt
-                sh 'pip3 install -r requirements.txt'
+                script {
+                    // Installer Python 3 et pip3 si non installés
+                    sh 'apt-get update && apt-get install -y python3 python3-pip'
+                }
             }
         }
 
-        stage('Run Unit Tests') {
+        stage('Install dependencies') {
             steps {
-                // Exécuter les tests unitaires
-                sh 'python3 -m unittest discover -s tests'
+                script {
+                    // Installer les dépendances à partir de requirements.txt
+                    sh 'pip3 install -r requirements.txt'
+                }
+            }
+        }
+
+        stage('Run tests') {
+            steps {
+                script {
+                    // Exécuter les tests unitaires avec pytest
+                    sh 'pytest'
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                // Construire l'image Docker
-                sh 'docker build -t $DOCKER_IMAGE .'
+                script {
+                    // Construire une image Docker
+                    sh 'docker build -t my-app-image .'
+                }
             }
         }
 
         stage('Deploy to Test Server') {
             steps {
-                // Déployer l'application Docker sur un serveur de test (via SSH ou une autre méthode)
-                // Assurer que le serveur de test est configuré pour accepter les commandes
-                // Exemple d'une commande SSH pour lancer le conteneur Docker sur le serveur de test
-                sh 'ssh user@test-server "docker run -d -p 8000:8000 $DOCKER_IMAGE"'
+                script {
+                    // Déployer l'application sur le serveur de test
+                    sh './deploy.sh'  // Assurez-vous que le script de déploiement est en place
+                }
             }
-        }
-    }
-
-    post {
-        success {
-            // Si tout a bien fonctionné, afficher un message de succès
-            echo '✅ Pipeline exécuté avec succès !'
-        }
-        failure {
-            // Si une étape échoue, afficher un message d'erreur
-            echo '❌ Erreur dans le pipeline !'
         }
     }
 }
