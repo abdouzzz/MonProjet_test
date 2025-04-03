@@ -2,26 +2,32 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "monprojet:latest"
-        CONTAINER_NAME = "monprojet_container"
+        DOCKER_IMAGE = "monprojet:latest"
     }
 
     stages {
+        stage('Install Dependencies (System)') {
+            steps {
+                script {
+                    sh '''
+                    apt-get update && apt-get install -y python3 python3-pip git
+                    '''
+                }
+            }
+        }
+
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/abdouzzz/MonProjet_test.git'
+                git url: 'https://github.com/abdouzzz/MonProjet_test.git', branch: 'main'
             }
         }
 
         stage('Check Python Version') {
             steps {
                 script {
-                    if (isUnix()) {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                         sh 'python3 --version'
                         sh 'pip3 --version'
-                    } else {
-                        bat 'python --version'
-                        bat 'pip --version'
                     }
                 }
             }
@@ -30,11 +36,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    if (isUnix()) {
-                        sh 'pip3 install -r requirements.txt'
-                    } else {
-                        bat 'pip install -r requirements.txt'
-                    }
+                    sh 'pip3 install --break-system-packages -r requirements.txt'
                 }
             }
         }
@@ -42,10 +44,8 @@ pipeline {
         stage('Run Tests') {
             steps {
                 script {
-                    if (isUnix()) {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                         sh 'python3 -m unittest discover -s tests'
-                    } else {
-                        bat 'python -m unittest discover -s tests'
                     }
                 }
             }
@@ -54,8 +54,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    bat 'docker build -t %IMAGE_NAME% .' // Windows
-                    sh 'docker build -t $IMAGE_NAME .' // Linux/Mac
+                    sh 'docker build -t $DOCKER_IMAGE .'
                 }
             }
         }
@@ -63,27 +62,18 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    bat '''
-                    docker stop %CONTAINER_NAME% || exit 0
-                    docker rm %CONTAINER_NAME% || exit 0
-                    docker run -d -p 8000:8000 --name %CONTAINER_NAME% %IMAGE_NAME%
-                    '''
-                    sh '''
-                    docker stop $CONTAINER_NAME || exit 0
-                    docker rm $CONTAINER_NAME || exit 0
-                    docker run -d -p 8000:8000 --name $CONTAINER_NAME $IMAGE_NAME
-                    '''
+                    sh 'docker run -d -p 8000:8000 $DOCKER_IMAGE'
                 }
             }
         }
     }
 
     post {
-        success {
-            echo "Pipeline exécuté avec succès ! 🎉"
-        }
         failure {
-            echo "Erreur dans le pipeline ! ❌"
+            echo '❌ Erreur dans le pipeline !'
+        }
+        success {
+            echo '✅ Pipeline exécuté avec succès !'
         }
     }
 }
